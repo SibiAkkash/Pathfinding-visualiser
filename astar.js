@@ -24,9 +24,9 @@ function setup() {
         }
     }
     
-    start = grid[1][1];
+    start = grid[20][20];
     end = grid[cols - 2][rows - 2];
-    start.dist = 0;
+    start.g = 0;
     start.prev = start;
     current = start;
     lookingAt.push(start);
@@ -50,12 +50,9 @@ function shortestPath(start, end) {
         path.unshift(current);
         current = current.prev;
     }
-    path.unshift(start);
+    
     for(let i = 0; i < path.length; i++) {
         path[i].show(255,255,51);
-        /* if(i == 0) {
-            ellipse((this.x * w))
-        } */
     }
 }
 
@@ -77,9 +74,11 @@ function draw() {
                 grid[i][j].show(255, 255, 255);
         }
     }
+
     for(let i = 0; i < visited.length; i++) {
         visited[i].show(0, 0, 255);
     }
+
     for(let i = 0; i < lookingAt.length; i++) {
         lookingAt[i].show(255,165,0);
     }
@@ -87,14 +86,18 @@ function draw() {
     start.show(0, 255, 0);
     end.show(255, 0, 0);
     
-    console.log('current', current.i, current.j);
+    //console.log('current', current.i, current.j);
+    
     if(current === end) {
         console.log('finished');
         shortestPath(start, end);
         console.log('path shown');
         noLoop();
+        return;
     }
 
+    visited.push(current);
+    removeElement(lookingAt, current);
 
     let neighbours = current.getNeighboursWithDiagonals();
     for(let i = 0; i < neighbours.length; i++) {
@@ -102,32 +105,21 @@ function draw() {
         if(visited.includes(neighbour)) {
             continue;
         }
+
+        let tentativeG = current.g + 1;
+
         // consider node only if its not a wall and if its not being looked at already
         if(!lookingAt.includes(neighbour) && !neighbour.wall) { 
-            neighbour.dist = current.dist + 1;
-            neighbour.prev = current;
             lookingAt.push(neighbour);
         }
 
-        let tentativeDist, g;
-        //* a*
-        neighbour.f = heuristic(neighbour, end);
-        g = 1;
-        tentativeDist = current.dist + g;
-
-        /* //* dijkstra
-            g = 1;
-        tentativeDist = current.dist + g;
-        */
-
-        if(tentativeDist < neighbour.dist) {
-            neighbour.dist = tentativeDist;
+        if(tentativeG < neighbour.g) {
+            neighbour.g = tentativeG; 
             neighbour.prev = current;
+            neighbour.f = neighbour.g + heuristic(neighbour, end); // total cost estimate
         }
     }
-    visited.push(current);
-    removeElement(lookingAt, current);
-    // to find the next node
+    
     let minNode = 0;
     let minDist = Infinity;
 
@@ -136,26 +128,18 @@ function draw() {
         noLoop();
         return;
     } else {
-        /* for(let i = 0; i < lookingAt.length; i++) {
-            if(lookingAt[i].dist < minDist) {
-                minDist = lookingAt[i].dist;
-                minNode = lookingAt[i];
-            }
-        } 
-        current = minNode;
-        */
         for(let i = 0; i < lookingAt.length; i++) {
-            if(lookingAt[i].f < lookingAt[minNode].f && lookingAt[i].dist < minDist) {
+            if(lookingAt[i].f < lookingAt[minNode].f) {
                 minNode = i;
-                minDist = lookingAt[i].dist;
+                minDist = lookingAt[i].f;
             }
         }
         current = lookingAt[minNode];
-        
     }
 
     if(minDist == Infinity) {
         console.log('no path to end node !!');
         noLoop();
+        return;
     }
 }

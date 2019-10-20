@@ -24,7 +24,7 @@ function setup() {
         }
     }
     
-    start = grid[1][1];
+    start = grid[20][20];
     end = grid[cols - 2][rows - 2];
     start.dist = 0;
     start.prev = start;
@@ -59,9 +59,6 @@ function shortestPath(start, end) {
     }
 }
 
-function heuristic(cell, end) {
-    return abs(cell.i - end.i) + abs(cell.j - end.j);
-}
 
 function gScoreWeighted() {
 
@@ -99,6 +96,7 @@ function draw() {
     let neighbours = current.getNeighboursWithDiagonals();
     for(let i = 0; i < neighbours.length; i++) {
         let neighbour = neighbours[i];
+
         if(visited.includes(neighbour)) {
             continue;
         }
@@ -109,21 +107,13 @@ function draw() {
             lookingAt.push(neighbour);
         }
 
-        let tentativeDist, g;
-        //* a*
-        neighbour.f = heuristic(neighbour, end);
-        g = 1;
-        tentativeDist = current.dist + g;
-
-        /* //* dijkstra
-            g = 1;
-        tentativeDist = current.dist + g;
-        */
+        let tentativeDist = current.dist + 1;
 
         if(tentativeDist < neighbour.dist) {
             neighbour.dist = tentativeDist;
             neighbour.prev = current;
         }
+
     }
     visited.push(current);
     removeElement(lookingAt, current);
@@ -135,23 +125,16 @@ function draw() {
         // found shortest path tree
         noLoop();
         return;
-    } else {
-        /* for(let i = 0; i < lookingAt.length; i++) {
+
+    } 
+    else {
+        for(let i = 0; i < lookingAt.length; i++) {
             if(lookingAt[i].dist < minDist) {
                 minDist = lookingAt[i].dist;
                 minNode = lookingAt[i];
             }
         } 
-        current = minNode;
-        */
-        for(let i = 0; i < lookingAt.length; i++) {
-            if(lookingAt[i].f < lookingAt[minNode].f && lookingAt[i].dist < minDist) {
-                minNode = i;
-                minDist = lookingAt[i].dist;
-            }
-        }
-        current = lookingAt[minNode];
-        
+        current = minNode; 
     }
 
     if(minDist == Infinity) {
